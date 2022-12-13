@@ -7,7 +7,6 @@ use App\Http\Controllers\{
     ProjectController,
     SettingsController,
     ApiController,
-    MovieFileController,
     MovieListController,
     MovieController,
     PostController
@@ -106,20 +105,8 @@ use Illuminate\Support\Facades\Route;
     });
 
     Route::group(['prefix'=>'movie'], function(){
-        Route::group(['middleware' => 'auth:api'], function () {
-            // get all movies
-            Route::get('/allmovies', [MovieController::class,'index']);
-            // create movie
-            Route::post('/create', [MovieController::class,'create']);
-            // delete movie
-            Route::delete('/{id}', [MovieController::class,'destroy']);
-        });
-    });
-
-    Route::group(['prefix' => 'moviefile'], function () {
-        Route::group(['middleware' => 'auth:api'], function () {
-            Route::post('/{movie:id}', [MovieFileController::class, 'uploadmovie']);
-        });
+        Route::post('/upload', 'uploadmovie');
+        Route::get('/destroy/{id}', 'destroy');
     });
 
 

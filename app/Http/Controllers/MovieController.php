@@ -14,23 +14,38 @@ use Illuminate\Support\Facades\Storage;
 
 class MovieController extends Controller
 {
-    private $movieRepository;
+    public function uploadmovie(Request $request){
+        $request->validate([
+            'movie_id'=> 'required',
+            'url'=> 'mimetypes:video/avi,video/mpeg,video/quicktime,video/mp4,|required|max:102400',
+            // 'size'=>'required|max:102400'
+            // 'duration'=>'required',
+        ]);
 
-    public function __construct(MovieRepository $movies)
-    {
-        $this->movieRepository = $movies;
-//        $this->middleware('cache.no');
-    }
+        // a folder movies_folder will be created inside the s3 bucket that we will specify in the .env file
+         $base_location = 'movies_folder';
 
-    final public function create(MovieRequest $request): JsonResponse
-    {
-        $data = $request->validated();
-        // create Project
-        $movie = getUser()->movies()->create($data);
-        return $this->respondWithSuccess(['data' => [
-            'movie' => $this->movieRepository->parse($movie),
-            "message" => "Successfully created " . $movie->name
-        ]], 201);
+        // Handle File Upload
+        if($request->hasFile('movies')) {                       
+            $moviePath = $request->file('movies')->store($base_location, 's3');
+          
+        } else {
+            return response()->json(['success' => false, 'message' => 'No file uploaded'], 400);
+        }
+    
+        //We save new path
+        $movies = new MovieFile();
+        $movies->movie_id = $request->movie_id;
+        $movies->url = $moviePath;
+        $movies->thumbnail = $moviePath;
+        $movies->size = $request->size;
+        $movies->duration = $request->duration;
+        $movies->meta = $request->meta;
+        $movies->processed_at = Carbon::now();
+    
+        $movies->save();
+       
+        return response()->json(['success' => true, 'message' => 'Movies successfully uploaded', 'movies' =>$movies], 200);
     }
 
     final public function index(Request $request)
