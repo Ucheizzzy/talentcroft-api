@@ -19,11 +19,11 @@ return new class extends Migration
             $table->foreignIdFor(Movie::class);
             $table->string('name');
             $table->string('decription');
-            $table->string('url')->nullable();
             $table->longtext('thumbnail')->nullable();
+            $table->string('video')->nullable();
             $table->string('preview')->nullable();
-            $table->string('size')->nullable();
-            $table->string('duration')->nullable();
+            $table->integer('size')->nullable();
+            $table->integer('duration')->nullable();
             $table->json('meta')->nullable();
             $table->datetime('processed_at')->nullable();
             $table->timestamps();

@@ -29,12 +29,11 @@ class MovieRequest extends FormRequest
             'description' => ['required', 'string'],
             'tags' => ['required', 'array'],
             'type' => ['required', 'string'],
-            'category' => ['required', 'string'],
-            'status' => ['nullable', 'string'],
-            'release_date' => ['nullable'],
-            'available_from' => ['nullable'],
-            'available_to' => ['nullable'],
-            'visibility' => ['nullable', 'boolean'],
+            'age_rating' => ['required'],
+            'director' => ['required', 'string'],
+            'year' => ['required'],
+            'genre' => ['required'],
+            'title_image' => ['nullable']
         ];
     }
 }

@@ -21,14 +21,7 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->json('tags')->nullable();
             $table->string('type')->nullable();
-            $table->string('status')->default('draft');
-            $table->string('visibility')->default('private');
-            $table->timestamp('release_date')->nullable();
-            $table->timestamp('available_from')->nullable();
-            $table->timestamp('available_to')->nullable();
-            $table->float('amount', 20)->default(0);
-            $table->string('currency', 3)->default('NGN');
-            $table->boolean('has_discount')->default(false);
+            $table->boolean('status')->default(false);
             $table->timestamps();
             $table->softDeletes();
         });

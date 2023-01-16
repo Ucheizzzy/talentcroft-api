@@ -83,10 +83,8 @@ class PaymentController extends Controller
      */
     public function handleGatewayCallback()
     {
-         $paymentDetails = Paystack::getPaymentData();
-         $paystack = (new PaystackService())->verifyPayment();
-         dd($paymentDetails, $paystack);
-
+       $payment = Paystack::getPaymentData();
+        dd($payment);
 //         $paystack = (new PaystackService())->verifyPayment();
 //         $status = 'unknown';
 //         $message = $paystack['data']['message'];
@@ -104,7 +102,7 @@ class PaymentController extends Controller
 //             $transaction->status = "Success";
 //             $transaction->save();
 //         }
-        // return view('payment.callback', compact('status', 'message'));
+//         return view('payment.callback', compact('status', 'message'));
 
     }
 

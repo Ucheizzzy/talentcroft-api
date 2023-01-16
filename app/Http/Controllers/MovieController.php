@@ -33,6 +33,16 @@ class MovieController extends Controller
         ]], 201);
     }
 
+    public function show($id)
+    {
+        $movie = Movie::findOrFail($id);
+        // $post_location = "posts";
+        // $url = Storage::disk('s3')->url($post_location);
+        return $this->respondWithSuccess(['data' => [
+            'movie' => $this->movieRepository->parse($movie)
+            ]], 201);
+    }
+
 
     final public function index(Request $request)
     {

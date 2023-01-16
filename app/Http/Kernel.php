@@ -44,7 +44,9 @@ class Kernel extends HttpKernel
         ValidatePostSize::class,
         TrimStrings::class,
         ConvertEmptyStringsToNull::class,
-        \App\Http\Middleware\Cors::class
+        \App\Http\Middleware\Cors::class,
+        // \Barryvdh\Cors\HandleCors::class,
+
     ];
 
     /**

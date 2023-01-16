@@ -17,7 +17,8 @@ return new class extends Migration
             $table->string('age_rating');
             $table->text('director');
             $table->string('year');
-            //
+            $table->string('genre');
+            $table->string('title_image')->nullable();
         });
     }
 

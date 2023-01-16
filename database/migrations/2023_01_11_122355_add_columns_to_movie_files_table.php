@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::table('movie_files', function (Blueprint $table) {
             $table->string('age_rating');
             $table->text('director');
-            $table->string('year');
+            $table->string('genre');
         });
     }
 

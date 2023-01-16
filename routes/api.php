@@ -53,8 +53,6 @@ use Illuminate\Support\Facades\Route;
         // reset password
          Route::post('/resetpassword', [UserController::class, 'resetpassword']);
 
-        //  delete a post
-        Route::get('/deletepost/{id}', [UserController::class, 'deletePost']);
 
         //  create account details
         Route::post('/create/account', [UserController::class, 'createAccount']);
@@ -86,13 +84,6 @@ use Illuminate\Support\Facades\Route;
 
 
     });
-    // Route::group([
-    //     'middleware' => ['api', 'cors'],
-    //     'prefix' => 'post',
-    // ], function ($router) {
-    //      //Add you routes here, for example:
-    //         Route::get('/allpost', [PostController::class, 'getAllPost']);
-    // });
    
     Route::group(['middleware' => ['api', 'cors'], 'prefix' => 'post'], function () {
          // find all post
@@ -117,11 +108,13 @@ use Illuminate\Support\Facades\Route;
 
 
     Route::group(['prefix'=>'movie'], function(){
-        // Route::group(['middleware' => 'auth:api'], function () {
+        Route::group(['middleware' => 'auth:api'], function () {
             // get all movies
             Route::get('/allmovies', [MovieController::class,'index']);
             // create movie
             Route::post('/create', [MovieController::class,'create']);
+            // find movie
+            Route::get('/{id}', [MovieController::class,'show']); 
 
             // upload to amazon movie
             Route::post('/store', [MovieController::class,'store']);
@@ -130,7 +123,7 @@ use Illuminate\Support\Facades\Route;
             Route::delete('/{id}', [MovieController::class,'destroy']);
             // delete movie
             Route::delete('/delete/{id}', [MovieController::class,'delete']);
-        // });
+        });
     });
 
 
@@ -138,6 +131,9 @@ use Illuminate\Support\Facades\Route;
         Route::group(['middleware' => 'auth:api'], function () {
            // upload moviefile
            Route::post('/{movie:id}', [MovieFileController::class,'uploadmovie']); 
+           Route::get('/{id}', [MovieFileController::class,'show']); 
+           Route::delete('/{id}', [MovieFileController::class,'destroy']); 
+           Route::get('/', [MovieFileController::class,'getAllFiles']); 
         });
     });
 

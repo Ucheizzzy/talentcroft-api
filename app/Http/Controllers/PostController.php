@@ -8,19 +8,38 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class PostController extends Controller
 {
     public function getAllPost(){
         // $post = Post::getpost();
+        $url = Storage::disk('s3')->files('posts');
         $post = Post::latest()->get();
-        return $this->respondWithSuccess(['data' => ['message' => 'All post made by users', 'post' => $post]], 201);
+        // dd($url, $post[0]->id);
+        return $this->respondWithSuccess(['data' => [
+            'message' => 'All post made by users', 
+            'post' => $post,
+            // 'id' => $post->id,
+            // 'user_id' => $post->user_id,
+            // 'description' => $post->description,
+            // 'url' => $url
+            ]
+        ], 201);
     }
 
     public function show($id)
     {
         $post = Post::findOrFail($id);
-        return $this->respondWithSuccess(['data' => ['post' => $post]], 201);
+        $post_location = "posts";
+        $url = Storage::disk('s3')->url($post_location);
+        return $this->respondWithSuccess(['data' => [
+            // 'post' => $post
+            'id' => $post->id,
+            'user_id' => $post->user_id,
+            'description' => $post->description,
+            'url' => "$url/$post->id.mp4"
+            ]], 201);
     }
 
     public function createPost(PostRequest $request, User $user): JsonResponse
@@ -38,10 +57,9 @@ class PostController extends Controller
         $aws = env('AWS_ROUTE');
         $file = $request->url;
         $post_id = $post->id;
-        $url = $request->file('url')->store($post_location,'s3');
-        // $url = $file->storeAs($user_id,  "$post_id.{$file->extension()}" , 's3'); 
+        $path = $file->storeAs($post_location, "$post->id.{$file->extension()}" , 's3'); 
         return $this->respondWithSuccess([
-            'posts' => ["id" => $post_id, "user_id" => $user_id, "description" => $post->description, "url" => "$aws/$url", "message" => "Successfully created " . $post->id]], 201);
+            'posts' => ["id" => $post_id, "user_id" => $user_id, "description" => $post->description, "url" => "$aws/$path", "message" => "Successfully created " . $post->id]], 201);
     }
 
     final public function destroy($id)

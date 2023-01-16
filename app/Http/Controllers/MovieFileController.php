@@ -11,55 +11,18 @@ use ProtoneMedia\LaravelFFMpeg\Support\FFMpeg;
 
 class MovieFileController extends Controller
 {
-    // public function uploadmovie(Request $request, Movie $movie){
-    //     $request->validate([
-    //         'name' => ['required', 'string'],
-    //         'decription' => ['required', 'string'],
-    //         'url'=> 'mimetypes:video/avi,video/mpeg,video/quicktime,video/mp4,|required|max:102400',
-    //         // 'thumbnail' => 'mimes:jpeg,jpg,png,gif|required|max:10000',
-    //         'size' => 'nullable',
-    //         'preview' => 'nullable',
-    //         'meta' => 'nullable',
-    //     ]);
-    //     // a folder movies_folder will be created inside the s3 bucket that we will specify in the .env file
-    //      $base_location = 'movies_folder';
-    //      $id = $request->id;
-    //      $movie_id = $movie->id;
-    //     // Handle File Upload
-    //     if($request->hasFile('url')) {                       
-    //         $moviePath = $request->file('url')->store($base_location, 's3');
-    //      } else {
-    //         return response()->json(['success' => false, 'message' => 'No file uploaded'], 400);
-    //     }
-        
-    //     //We save new path
-    //     $movies = new MovieFile();
-    //     $movies->movie_id = $movie->id;
-    //     $movies->name = $request->name;
-    //     $movies->decription = $request->decription;
-    //     $movies->url = $moviePath;
-    //     $movies->thumbnail = $moviePath;
-    //     $movies->size = $request->size;
-    //     $movies->duration = $request->duration;
-    //     $movies->meta = $request->meta;
-    //     $movies->processed_at = Carbon::now();
-    
-    //     $movies->save();
-       
-    //     return response()->json(['success' => true, 'message' => 'Movies successfully uploaded', 'movies' =>$movies], 200);
-    // }
-
     public function uploadmovie(Request $request, Movie $movie)
     {
-        $file = $request->url;
+        $file = $request->video;
         // dd($file);
         $movie_location = "movies";
         $thumbnail_location = "thumbnails";
         $aws = env('AWS_ROUTE');
-        $movieFile = $movie->episodes()->create($request->only(['name', 'decription']));
-        
+        $movieFile = $movie->episodes()->create($request->only(['name', 'decription', 'age_rating', 'director', 'genre']));
+        // dd($movie->id, $movieFile->id);
         $path = $file->storeAs($movie->id, "$movieFile->id.{$file->extension()}", 'processing');
-
+        
+        // $file_size = $file->getSize();
         $movie_id = $movie->id;
         $file_id = $movieFile->id;
         // $destination = "$movie_id/$file_id/";
@@ -73,11 +36,11 @@ class MovieFileController extends Controller
             $thumbnails[] = "$thumbnail";
             $media = $media->getFrameFromSeconds($second)->export()->toDisk("s3")->save($thumbnail);
         }
-        $filename = "$movie_location/$file_id.{$file->extension()}";
+        $filename = "$movie_location/$movie->id.{$file->extension()}";
         $movieFile->update([
             'thumbnail' => "$aws/$thumbnails[0]",
             'duration' => $duration,
-            "url" => "$aws/$filename",
+            "video" => "$aws/$filename",
         ]);
 
         $media = $media->export()
@@ -103,16 +66,9 @@ class MovieFileController extends Controller
             // })
             ->toDisk('s3')
             ->save($filename);
-        $size = 0;
-
-//        if (File::exists()) {
-
-//        }
-        // foreach (File::allFiles(storage_path("processed/videos/{$destination}")) as $file) {
-            // $file_size += $file->getSize();
-        //      }
         // UPDATE file processed at and filesize
-        $movieFile->update(['processed_at' => now()]);
+        $movieFile->update(['processed_at' => now(), //'size' => $file_size / 1048576
+    ]);
         //remove $media created files
         $media->cleanupTemporaryFiles();
         
@@ -132,7 +88,9 @@ class MovieFileController extends Controller
 
         //We remove existing movie
         if(!empty($movie)){
-            Storage::disk('s3')->delete($movie->path);
+            $movie_location = "movies";
+            $filename = "$movie_location/$movie->id.mp4";
+            Storage::disk('s3')->delete($filename);
             $movie->delete();
             return response()->json(['success' => true, 'message' => 'Movie deleted'], 200);
         }

@@ -167,6 +167,8 @@ return [
         Illuminate\View\ViewServiceProvider::class,
         ProtoneMedia\LaravelFFMpeg\Support\ServiceProvider::class,
         Unicodeveloper\Paystack\PaystackServiceProvider::class,
+        // Barryvdh\Cors\ServiceProvider::class,
+
 
         /*
          * Package Service Providers...
