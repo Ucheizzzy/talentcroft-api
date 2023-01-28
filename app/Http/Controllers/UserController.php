@@ -30,6 +30,7 @@ class UserController extends Controller
     private $repo;
     private string $api_key = 'VIEWS_API';
 
+
     public function __construct(UserRepository $repo)
     {
         $this->repo = $repo;
@@ -115,39 +116,47 @@ class UserController extends Controller
         // }
     }
 
-    public function updateUser(Request $request, $id){
-        $request->validate([
-            'first_name' => 'nullable|min:2',
-            'last_name' => 'nullable|min:2',
-            'phone_number' => 'nullable|unique:users,phone_number',
-            
-        ]);
-     
-        try{
-            $user = User::findorfail($id)->update([
-                'first_name'=>$request->first_name,
-                'last_name'=>$request->last_name,
-                'phone_number'=>$request->phone_number,
-                'avatar'=>$request->avatar,
-                'location'=>$request->location,
-                'bio'=>$request->bio,
-                'tags'=>$request->tags,
-                'banner'=>$request->banner,
-                'password'=>Hash::make($request->password),
-            ]);
-            // generate Random Token min of 10 and  characters
-             $token = rand(10,100000);
-            return response([
-                'message'=>'user updated successful',
-                'token'=>$token,
-                'user'=>$user,
-            ], 200);
-        }catch(Exception $exception){
-            return response([
-                'message'=>$exception->getMessage(),
-            ], 400);
-        } 
+    public function updateUser(Request $request, $id)
+    {
+        $user = User::find($id);
+        $user->update($request->all());
+        return response([ 'message'=>'user updated successful', 'user'=>$user], 201);
+
     }
+
+    // public function updateUser(Request $request, $id){
+    //     $request->validate([
+    //         'first_name' => 'nullable|min:2',
+    //         'last_name' => 'nullable|min:2',
+    //         'phone_number' => 'nullable|unique:users,phone_number',
+            
+    //     ]);
+     
+    //     try{
+    //         $user = User::findorfail($id)->update([
+    //             'first_name'=>$request->first_name,
+    //             'last_name'=>$request->last_name,
+    //             'phone_number'=>$request->phone_number,
+    //             'avatar'=>$request->avatar,
+    //             'location'=>$request->location,
+    //             'bio'=>$request->bio,
+    //             'tags'=>$request->tags,
+    //             'banner'=>$request->banner,
+    //             'password'=>Hash::make($request->password),
+    //         ]);
+    //         // generate Random Token min of 10 and  characters
+    //          $token = rand(10,100000);
+    //         return response([
+    //             'message'=>'user updated successful',
+    //             'token'=>$token,
+    //             'user'=>$user,
+    //         ], 200);
+    //     }catch(Exception $exception){
+    //         return response([
+    //             'message'=>$exception->getMessage(),
+    //         ], 400);
+    //     } 
+    // }
 
     public function getAllUsers(){
         $users = User::latest()->get();
@@ -362,5 +371,24 @@ class UserController extends Controller
         $post->update($validated);
 
         return ('Successfully Updated');
+    }
+
+  final public function createUser(Request $request): JsonResponse
+    {
+        $request->validate(['first_name' => 'required|min:2', 'last_name' => 'required|min:2',
+            'email' => 'required|email|unique:users',
+            'password' => 'required', 'user_type' => 'required'
+        ]);
+
+        $user = DB::transaction(function () use ($request) {
+            $data = $request->all();
+            $data['password'] = Hash::make($request->password);
+            // $data['avatar'] = textToImag;
+$data['avatar'] = textToImage(text: 'No avatar', bg: randomColorCode());
+            $user = User::create($data);
+            return $user;
+        });
+        $accessToken = $user->createToken($this->api_key)->accessToken;
+        return $this->respondWithSuccess(['data' => ['token' => $accessToken, 'user' => $this->repo->prepareUserData($user)]], 201);
     }
 }

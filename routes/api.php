@@ -39,11 +39,14 @@ use Illuminate\Support\Facades\Route;
         Route::group(['middleware' => 'auth:api'], function () {
             // get authenticated user
             Route::get('/profile/{id}', [UserController::class, 'getAuthenticatedUser']);
+
+              Route::post('/admin/createUser', [UserController::class, 'createUser']);
             // update user credentials
             Route::put('/update/{id}', [UserController::class, 'updateUser']);
             // delete user
             Route::delete('/{id}', [UserController::class, 'deleteUser']);
         });
+   
         //get all users
         Route::get('/allusers', [UserController::class,'getAllUsers']);
         //get a user
