@@ -15,11 +15,11 @@ return new class extends Migration
     {
         Schema::create('movie_lists', function (Blueprint $table) {
             $table->id()->from(time());
+            $table->integer('user_id');
             $table->string('title');
             $table->longtext('description')->nullable();
             $table->string('type')->nullable();
             $table->string('genre')->nullable();
-            $table->json('content')->nullable();
             $table->timestamps();
         });
     }

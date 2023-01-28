@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\MovieList;
 use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -16,7 +17,8 @@ return new class extends Migration
     {
         Schema::create('movies', function (Blueprint $table) {
             $table->id()->from(time());
-            $table->integer('user_id');
+            $table->foreignIdFor(MovieList::class);
+            // $table->integer('user_id');
             $table->string('name');
             $table->text('description')->nullable();
             $table->json('tags')->nullable();

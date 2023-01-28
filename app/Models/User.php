@@ -54,14 +54,19 @@ class User extends Authenticatable
         return $this->hasMany(Payment::class);
     }
 
-    public function movies()
-    {
-        return $this->hasMany(Movie::class);
-    }
+    // public function movies()
+    // {
+    //     return $this->hasMany(Movie::class);
+    // }
 
     public function posts(): HasMany
     {
         return $this->hasMany(Post::class);
+    }
+
+    public function lists()
+    {
+        return $this->hasMany(MovieList::class);
     }
 
     public function following()

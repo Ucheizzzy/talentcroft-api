@@ -9,10 +9,23 @@ class Followers extends Model
 {
     use HasFactory;
 
-    protected $guarded = [];
+    protected $fillable = ['follower_id', 'user_id'];
 
-    public function user()
+    protected $hidden = ['id','updated_at', 'deleted_at','created_at','user_id'];
+
+    /**
+     * @return void
+     */
+    protected static function boot()
     {
-        return $this->belongsTo(User::class);
+        parent::boot();
+        static::creating(function ($query) {
+            $query->follower_id = auth()->id();
+        });
+    }
+
+    public function user(): HasMany
+    {
+        return $this->HasMany(User::class);
     }
 }

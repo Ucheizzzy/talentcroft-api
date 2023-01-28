@@ -22,11 +22,11 @@ class MovieResource extends JsonResource
     {
         $parent = parent::toArray($request);
         //converted to boolean
-        $thumbnail = textToImage('No Thumbnail');
+        $thumbnail =  "";
         $previewLink = "";
         if (isset($this->file)) {
-            $thumbnail = !$this->file->thumbnails ? textToImage('No Thumbnail') : $this->file->thumbnails[0];
-            $previewLink = $this->file->url ?? "";
+            $thumbnail = !$this->file->thumbnail ? textToImage('No Thumbnail') : $this->file->thumbnail;
+            $previewLink = $this->file->video ?? "";
         }
 
         $isAuth = auth('api')->check();

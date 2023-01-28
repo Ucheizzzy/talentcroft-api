@@ -14,12 +14,17 @@ class Movie extends Model
     protected $fillable = ['name', 'description', 'type', 'tags', 'status', 'age_rating','director', 'year', 'genre'];
     protected $searchable = ['name', 'description'];
 
-    public function user()
+    // public function user()
+    // {
+    //     return $this->belongsTo(User::class);
+    // }
+
+    public function list()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(MovieList::class);
     }
 
-    public function files()
+    public function file()
     {
         return $this->hasOne(MovieFile::class);
     }

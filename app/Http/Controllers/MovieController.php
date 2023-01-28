@@ -6,10 +6,12 @@ use App\Http\Requests\MovieRequest;
 use App\Http\Resources\MovieResource;
 use App\Models\Movie;
 use App\Models\MovieFile;
+use App\Models\MovieList;
 use App\Repositories\MovieRepository;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class MovieController extends Controller
@@ -22,18 +24,18 @@ class MovieController extends Controller
 //        $this->middleware('cache.no');
     }
 
-    final public function create(MovieRequest $request): JsonResponse
+    final public function create(MovieRequest $request, MovieList $movieList): JsonResponse
     {
         $data = $request->validated();
-        // create Project
-        $movie = getUser()->movies()->create($data);
+        // create Movie
+        $movie = $movieList->movies()->create($data);
         return $this->respondWithSuccess(['data' => [
             'movie' => $this->movieRepository->parse($movie),
             "message" => "Successfully created " . $movie->name
         ]], 201);
     }
 
-    public function show($id)
+    final public function show($id)
     {
         $movie = Movie::findOrFail($id);
         // $post_location = "posts";
@@ -41,6 +43,34 @@ class MovieController extends Controller
         return $this->respondWithSuccess(['data' => [
             'movie' => $this->movieRepository->parse($movie)
             ]], 201);
+    }
+
+    // final public function rando()
+    // {
+    //     $movie = Movie::inRandomOrder()->limit(1)->get();
+    //     $data = MovieResource::collection($movie);
+    //     return $this->respondWithSuccess($data);
+    // }
+    public function rando(Request $request)
+    {
+        $type = $request->query('type');
+        $movie = null;
+
+        try {
+            if ($type === 'Series') {
+                $movie = Movie::where('type', 'Series')
+                                ->inRandomOrder()
+                                ->first();
+            } else {
+                $movie = Movie::where('type', 'Movie')
+                                ->inRandomOrder()
+                                ->first();
+
+            }
+            return $this->respondWithSuccess(['movie' => $this->movieRepository->parse($movie)]);
+        } catch (\Exception $e) {
+            return response()->json($e, 500);
+        }
     }
 
 

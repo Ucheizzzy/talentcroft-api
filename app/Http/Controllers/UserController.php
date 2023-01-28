@@ -16,6 +16,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use App\Http\Requests\ResetRequest;
 use App\Http\Requests\ForgetRequest;
+use App\Http\Resources\UserResource;
+use App\Models\Followers;
+use App\Models\Following;
 use App\Repositories\UserRepository;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -91,12 +94,38 @@ class UserController extends Controller
         return $this->respondWithSuccess(['data' => ['token' => $accessToken, 'user' => $this->repo->prepareUserData($user)]], 201);
     }
 
-    final public function getAuthenticatedUser(Request $request, $id): JsonResponse
+    final public function createUser(Request $request): JsonResponse
     {
-        $user = User::findOrFail($id);
-        $authenticated = getUser()->id;
-        if ($user->id == $authenticated) return $this->respondWithSuccess(['data'=>['message' =>'Authenticated User', 'user' => $this->repo->prepareUserData($user)]], 201);
-        return $this->respondWithError(['data'=>['message' =>'Account not found', 'user' => []]], 404);
+        $request->validate(['first_name' => 'required|min:2', 'last_name' => 'required|min:2',
+            'email' => 'required|email|unique:users',
+            'password' => 'required', 'user_type' => 'required'
+        ]);
+
+        $user = DB::transaction(function () use ($request) {
+            $data = $request->all();
+            $data['password'] = Hash::make($request->password);
+            $data['avatar'] = textToImage(text: 'No avatar', bg: randomColorCode());
+            $user = User::create($data);
+            return $user;
+        });
+        $accessToken = $user->createToken($this->api_key)->accessToken;
+        return $this->respondWithSuccess(['data' => ['token' => $accessToken, 'user' => $this->repo->prepareUserData($user)]], 201);
+    }
+
+    // final public function getAuthenticatedUser(Request $request, $id): JsonResponse
+    // {
+    //     $user = User::findOrFail($id);
+    //     $authenticated = getUser()->id;
+    //     if ($user->id == $authenticated) return $this->respondWithSuccess(['data'=>['message' =>'Authenticated User', 'user' => $this->repo->prepareUserData($user)]], 201);
+    //     return $this->respondWithError(['data'=>['message' =>'Account not found', 'user' => []]], 404);
+    // }
+
+    final public function getAuthenticatedUser(Request $request): JsonResponse
+    {
+        if (!$user = getUser()) return $this->respondWithError('Account not found', 404);
+        // (new UserRepository($user))->onBoard();
+        return $this->respondWithSuccess($this->prepareUserData($user));
+        // TODO::
     }
 
     public function getUser($id)
@@ -109,12 +138,48 @@ class UserController extends Controller
     final public function deleteUser($id)
     {
         // if (auth()->user()->user_type = 'admin'){
-            $user = User::destroy($id);
+            $user = User::findOrFail($id);
+            $user->delete();
             return $this->respondWithSuccess(['data' => ['message' => 'user '.$id.' has been deleted' ,'pricing' => $user]], 201);
         // } else {
             // return$this->respondWithSuccess(['message' => 'Only Admin can delete User'], 201);
         // }
     }
+
+    // public function updateUser(Request $request, $id){
+    //     $request->validate([
+    //         'first_name' => 'nullable|min:2',
+    //         'last_name' => 'nullable|min:2',
+    //         'phone_number' => 'nullable|unique:users,phone_number',
+            
+    //     ]);
+     
+    //     try{
+    //         $user = User::findorfail($id)->update([
+    //             'first_name'=>$request->first_name,
+    //             'last_name'=>$request->last_name,
+    //             'phone_number'=>$request->phone_number,
+    //             'avatar'=>$request->avatar,
+    //             'location'=>$request->location,
+    //             'bio'=>$request->bio,
+    //             'tags'=>$request->tags,
+    //             'banner'=>$request->banner,
+    //             'password'=>Hash::make($request->password),
+    //         ]);
+    //         // generate Random Token min of 10 and  characters
+    //          $token = rand(10,100000);
+    //         return response([
+    //             'message'=>'user updated successful',
+    //             'token'=>$token,
+    //             'user'=>$user,
+    //         ], 200);
+    //     }catch(Exception $exception){
+    //         return response([
+    //             'message'=>$exception->getMessage(),
+    //         ], 400);
+    //     } 
+    // }
+
 
     public function updateUser(Request $request, $id)
     {
@@ -160,7 +225,8 @@ class UserController extends Controller
 
     public function getAllUsers(){
         $users = User::latest()->get();
-        return $this->respondWithSuccess(['data' => ['message' => 'All talencroft users', 'users' => $users]], 201);
+        $data = UserResource::collection($users);
+        return $this->respondWithSuccess(['data' => ['message' => 'All talencroft users', 'users' => $data]], 201);
     }
 
 
@@ -195,6 +261,41 @@ class UserController extends Controller
 
     }
 
+    final public function getFollowers()
+    {
+        $follower = Followers::latest()->get();
+        return $this->respondWithSuccess(['data' => ['message' => 'All followers', 'follower' => $follower]], 201);
+    }
+
+    final public function followUser(Followers $followers, Following $followings, User $user)
+    {
+        // dd($user->id, $user->follower());
+        //Delete if exist
+        $follow = $followers->where(['follower_id' => auth()->id()])->first();
+        $followed = $followings->where(['following_id' => $user->id]);
+        if ($follow) {
+            $follow->delete();
+            return $this->respondWithSuccess('delete');
+        }
+        $followers->updateOrCreate(['follower_id' => auth()->id()], ['user_id' => $user->id]);
+        $followings->updateOrCreate(['following_id' => $user->id], ['user_id' => auth()->id()]);
+
+        return $this->respondWithSuccess('followed');
+    } 
+
+    // final public function followUser(Followers $followers, User $user)
+    // {
+    //     // dd($user->id, $user->follower());
+    //     //Delete if exist
+    //     $follow = $followers->where(['follower_id' => auth()->id()])->first();
+    //     if ($follow) {
+    //         $follow->delete();
+    //         return $this->respondWithSuccess('delete');
+    //     }
+    //     $followed = $followers->updateOrCreate(['follower_id' => auth()->id()], ['user_id' => $user->id]);
+    //     return $this->respondWithSuccess('followed');
+    // }  
+
     public function resetpassword(ResetRequest $request){
 
         $email = $request->email;
@@ -224,171 +325,5 @@ class UserController extends Controller
             'message' => 'Password Change Successfully'
          ],200);
     
-    }
-
-
-
-    public function deletePost($id){
-        $onepost = Post::findorfail($id)->delete();
-        return $this->respondWithSuccess(['data' => ['message' => 'Post deleted successfully', 'onepost' => $onepost]], 201);
-    }
-
-    public function createAccount(Request $request){
-        $request->validate([
-            'account_number' =>'required|digits:10',
-            'bank_name' =>'required',
-            'account_name' =>'required',
-        ],[
-            'bank_code.digits'=> 'Your account number must be 10 digits',
-        ]);
-
-        try{
-            AccountDetails::insert([
-                'user_id'=>$request->user_id,
-                'account_number'=>$request->account_number,
-                'bank_name'=>$request->bank_name,
-                'account_name'=>$request->account_name,
-                'created_at'=>Carbon::now(),
-            ]);
-            return response([
-                'message'=> 'Account details created successfully'
-            ], 200);
-
-        }catch(Exception $exception){
-            return response([
-                'message'=>$exception->getMessage(),
-            ], 400);
-
-        }
-     
-    }
-
-    public function getAccountDetails($id){
-        $account = AccountDetails::findorfail($id);
-        return $this->respondWithSuccess(['data' => ['message' => 'Account details of user id '.$account->user_id.' is found', 'account' => $account]], 201);
-    }
-
-    public function deleteAccountDetails($id){
-        $account_details = AccountDetails::findorfail($id);
-        $account = $account_details->delete();
-        return $this->respondWithSuccess(['data' => ['message' => 'Account details of user id '.$account_details->user_id.' has been deleted successfully', 'account' => $account]], 201);
-    }
-
-
-    public function movieUpload(Request $request)
-    {
-        $this->validate($request, [
-            'movieid'=>'required',
-            'title' => 'required|string|max:255',
-            'video' => 'required|file|mimetypes:video/mp4',
-        ]);
-        $video = new MovieFile();
-        $video->title = $request->title;
-        if ($request->hasFile('video'))
-        {
-            $path = $request->file('video')->store('videos', ['disk' =>      'my_files']);
-            $video->video = $path;
-        }
-        $video->save();
-
-    }
-
-    public function getMovie($id){
-        $movie = MovieFile::findOrFail($id);
-        return $this->respondWithSuccess(['data' => ['message' => 'Movie file '.$movie->movie_files_id.' is found', 'account' => $movie]], 201);
-
-    }
-
-
-    public function updateMovie(Request $request, MovieFile $id)
-    {
-        $request->validate([
-            'name' => 'required',
-            'decription' => 'required',
-            'thumbnail' => 'required',
-        ]);
-
-        $id->fill($request->post())->save();
-
-        return redirect()->route('companies.index')->with('success','Company Has Been updated successfully');
-    }
-
-    public function getAllMovies()
-    {
-        $movies = MovieFile::all();
-        return $this->respondWithSuccess(['data' => ['message' => 'Movie file '.$movies->movie_files_id.' is found', 'account' => $movies]], 201);
-
-    }
-
-    public function deleteMovie($id)
-    {
-        $movie = Movie::findorfail($id)->delete();
-        return $this->respondWithSuccess(['data' => ['message' => 'Movie deleted successfully', 'movie' => $movie]], 201);
-    }
-
-    public function randomMovie()
-    {
-        $movies = MovieFile::table('posts')
-            ->inRandomOrder()
-            ->limit(1)
-            ->get();
-        return $movies;
-    }
-
-    public function createPost(Request $request)
-    {
-        $user = $request->user();
-
-
-        $formData = $request->all();
-
-
-        $formData['url'] = Str::slug($request->get('description'));
-
-
-        $user->posts()->create($formData);
-
-        return "Post successfully saved";
-    }
-
-    public function getPost($id)
-    {
-        $post = Post::where('posts_id', $id)->first();
-
-        return $post;
-    }
-
-    public function updatePost(Request $request, Post $post)
-    {
-        $validated = $request->validate([
-            'user_id' => 'required|',
-            'description' => 'required|string|min:5|max:2000',
-
-        ]);
-
-        $validated['url'] = Str::slug($validated['description'], '-');
-
-        $post->update($validated);
-
-        return ('Successfully Updated');
-    }
-
-  final public function createUser(Request $request): JsonResponse
-    {
-        $request->validate(['first_name' => 'required|min:2', 'last_name' => 'required|min:2',
-            'email' => 'required|email|unique:users',
-            'password' => 'required', 'user_type' => 'required'
-        ]);
-
-        $user = DB::transaction(function () use ($request) {
-            $data = $request->all();
-            $data['password'] = Hash::make($request->password);
-            // $data['avatar'] = textToImag;
-$data['avatar'] = textToImage(text: 'No avatar', bg: randomColorCode());
-            $user = User::create($data);
-            return $user;
-        });
-        $accessToken = $user->createToken($this->api_key)->accessToken;
-        return $this->respondWithSuccess(['data' => ['token' => $accessToken, 'user' => $this->repo->prepareUserData($user)]], 201);
     }
 }

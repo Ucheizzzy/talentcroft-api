@@ -36,15 +36,19 @@ use Illuminate\Support\Facades\Route;
         Route::post('/login', [UserController::class, 'login']);
         // register
         Route::post('/register', [UserController::class, 'register']);
+        Route::post('/admin/createUser', [UserController::class, 'createUser']);
         Route::group(['middleware' => 'auth:api'], function () {
             // get authenticated user
-            Route::get('/profile/{id}', [UserController::class, 'getAuthenticatedUser']);
-
-              Route::post('/admin/createUser', [UserController::class, 'createUser']);
+             Route::get('/profile', [UserController::class, 'getAuthenticatedUser']);
+            // userstats
+            Route::get('/stats', [UserController::class,'userStats']);
             // update user credentials
             Route::put('/update/{id}', [UserController::class, 'updateUser']);
             // delete user
             Route::delete('/{id}', [UserController::class, 'deleteUser']);
+
+            Route::get('/follow/{user:id}', [UserController::class, 'followUser']);
+            
         });
    
         //get all users
@@ -56,41 +60,15 @@ use Illuminate\Support\Facades\Route;
         // reset password
          Route::post('/resetpassword', [UserController::class, 'resetpassword']);
 
-
-        //  create account details
-        Route::post('/create/account', [UserController::class, 'createAccount']);
-
-         //  get account
-        Route::get('/getaccount/{id}', [UserController::class, 'getAccountDetails']);
-
-         //  delete account
-        Route::get('/deleteaccount/{id}', [UserController::class, 'deleteAccountDetails']);
-
-         //Get Movie
-        Route::get('getamovie', [ UserController::class, 'getMovie' ]);
-
-        //Delete a movie
-        Route::delete('/{id}', [UserController::class,'deleteMovie']);
-
-        //Getting a movie at random
-        Route::get('/getrandommovie', [UserController::class,'randomMovie']);
-
-        //creating a post
-        Route::post('/createpost', [UserController::class,'createPost']);
-
-        //Getting a post
-        Route::get('/getpost', [UserController::class,'getPost']);
-
-        //updating a post
-        Route::post('/updatepost/{id}', [UserController::class,'updatePost']);
-
-
+         Route::get('/followers', [UserController::class, 'getFollowers']);
 
     });
    
     Route::group(['middleware' => ['api', 'cors'], 'prefix' => 'post'], function () {
          // find all post
         Route::get('/allpost', [PostController::class, 'getAllPost']);
+        // find 10 random posts
+        Route::get('/random', [PostController::class, 'random']);
         // find one post
         Route::get('/{id}', [PostController::class, 'show']);
         // delete post
@@ -114,11 +92,15 @@ use Illuminate\Support\Facades\Route;
         Route::group(['middleware' => 'auth:api'], function () {
             // get all movies
             Route::get('/allmovies', [MovieController::class,'index']);
+             // comedyList
+             Route::get('/comedy-list', [MovieController::class,'comedyList']);
+            //  get random movie
+            Route::get('/random', [MovieController::class,'rando']);
             // create movie
-            Route::post('/create', [MovieController::class,'create']);
+            Route::post('/{movieList:id}', [MovieController::class,'create']);
             // find movie
             Route::get('/{id}', [MovieController::class,'show']); 
-
+           
             // upload to amazon movie
             Route::post('/store', [MovieController::class,'store']);
 
@@ -134,11 +116,29 @@ use Illuminate\Support\Facades\Route;
         Route::group(['middleware' => 'auth:api'], function () {
            // upload moviefile
            Route::post('/{movie:id}', [MovieFileController::class,'uploadmovie']); 
+           Route::get('/all', [MovieFileController::class,'index']); 
            Route::get('/{id}', [MovieFileController::class,'show']); 
            Route::delete('/{id}', [MovieFileController::class,'destroy']); 
            Route::get('/', [MovieFileController::class,'getAllFiles']); 
         });
     });
+
+    Route::group(['prefix'=>'movielist'], function(){
+        Route::group(['middleware' => 'auth:api'], function () {
+            Route::get('/all', [MovieListController::class,'getAllMovieList']); 
+            Route::get('/type', [MovieListController::class,'index']); 
+            // upload moviefile
+            Route::post('/', [MovieListController::class,'create']); 
+            Route::get('/{id}', [MovieListController::class,'show']); 
+            Route::delete('/{id}', [MovieListController::class,'deleteMovieList']); 
+           
+        });
+    });
+
+    // Route::group(['prefix' => 'followers'], function () {
+    //     Route::get('/', [FollowersController::class, 'getAllFollowers']);
+    //     Route::get('/{id}', [FollowersController::class, 'show']);
+    // });
 
     Route::group(['middleware' => 'auth:api'], function () {
           // make payment

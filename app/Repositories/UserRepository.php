@@ -21,7 +21,7 @@ class UserRepository extends BaseRepository
     final public function prepareUserData(User $user): User
     {
         $user->append(['name', 'metrics']);
-        $user->post;
+        $user->posts;
         $user->setting;
         return $user;
     }

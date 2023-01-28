@@ -18,8 +18,8 @@ return new class extends Migration
             $table->id()->from(time());
             $table->foreignIdFor(Movie::class);
             $table->string('name');
-            $table->string('decription');
-            $table->longtext('thumbnail')->nullable();
+            $table->string('description');
+            $table->string('thumbnail')->nullable();
             $table->string('video')->nullable();
             $table->string('preview')->nullable();
             $table->integer('size')->nullable();
