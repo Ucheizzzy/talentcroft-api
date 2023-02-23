@@ -24,7 +24,10 @@ class PaymentController extends Controller
     {
         $user = $request->user('api');
         if (!$user) return $this->respondWithError(['open' => 'auth', 'message' => 'Unauthorized'], 403);
-        $request->validate(['email' => 'required', 'amount' => 'required']);
+        $request->validate([
+            'email' => 'required',
+            'amount' => 'required'
+        ]);
         $paystack = new PaystackService();
         $email = $request->email;
         $amount = $request->amount;
@@ -63,6 +66,8 @@ class PaymentController extends Controller
      * Redirect the User to Paystack Payment Page
      * @return Url
      */
+
+
     public function redirectToGateway()
     {
         try{
@@ -79,8 +84,7 @@ class PaymentController extends Controller
     public function handleGatewayCallback()
     {
        $payment = Paystack::getPaymentData();
-       $paystack = (new PaystackService())->verifyPayment();
-        dd($payment, $paystack);
+        dd($payment);
 //         $paystack = (new PaystackService())->verifyPayment();
 //         $status = 'unknown';
 //         $message = $paystack['data']['message'];

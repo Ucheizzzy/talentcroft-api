@@ -24,7 +24,7 @@ class ListResource extends JsonResource
 
         $extraData = [
             "movie_count" => $this->movies->count(),
-            "movies" => $this->movies,
+            // "movies" => $this->movies,
             "files" => $this->files
         ];
         return array_merge($parent, $extraData);

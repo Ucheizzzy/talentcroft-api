@@ -33,6 +33,7 @@ class UserController extends Controller
     private $repo;
     private string $api_key = 'VIEWS_API';
 
+
     public function __construct(UserRepository $repo)
     {
         $this->repo = $repo;
@@ -187,6 +188,40 @@ class UserController extends Controller
         return response([ 'message'=>'user updated successful', 'user'=>$user], 201);
 
     }
+
+    // public function updateUser(Request $request, $id){
+    //     $request->validate([
+    //         'first_name' => 'nullable|min:2',
+    //         'last_name' => 'nullable|min:2',
+    //         'phone_number' => 'nullable|unique:users,phone_number',
+            
+    //     ]);
+     
+    //     try{
+    //         $user = User::findorfail($id)->update([
+    //             'first_name'=>$request->first_name,
+    //             'last_name'=>$request->last_name,
+    //             'phone_number'=>$request->phone_number,
+    //             'avatar'=>$request->avatar,
+    //             'location'=>$request->location,
+    //             'bio'=>$request->bio,
+    //             'tags'=>$request->tags,
+    //             'banner'=>$request->banner,
+    //             'password'=>Hash::make($request->password),
+    //         ]);
+    //         // generate Random Token min of 10 and  characters
+    //          $token = rand(10,100000);
+    //         return response([
+    //             'message'=>'user updated successful',
+    //             'token'=>$token,
+    //             'user'=>$user,
+    //         ], 200);
+    //     }catch(Exception $exception){
+    //         return response([
+    //             'message'=>$exception->getMessage(),
+    //         ], 400);
+    //     } 
+    // }
 
     public function getAllUsers(){
         $users = User::latest()->get();
