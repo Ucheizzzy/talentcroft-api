@@ -13,7 +13,8 @@ use App\Http\Controllers\{
     MovieListController,
     MovieController,
     MovieFileController,
-    PostController
+    PostController,
+    FollowerController
 };
 use Illuminate\Support\Facades\Route;
 
@@ -79,13 +80,13 @@ use Illuminate\Support\Facades\Route;
     });
 
 
-    Route::group(['prefix'=>'movielist'], function(){
-        Route::controller(MovieListController::class)->group(function(){
-            Route::get('/allmovielist', 'getallmovielist');
-            Route::post('/update/{id}', 'updatemovielist');
-            Route::get('/delete/{id}', 'deletemovielist');
-        });
-    });
+    // Route::group(['prefix'=>'movielist'], function(){
+    //     Route::controller(MovieListController::class)->group(function(){
+    //         Route::get('/allmovielist', 'getallmovielist');
+    //         Route::post('/update/{id}', 'updatemovielist');
+    //         Route::get('/delete/{id}', 'deletemovielist');
+    //     });
+    // });
 
 
     Route::group(['prefix'=>'movie'], function(){
@@ -132,7 +133,12 @@ use Illuminate\Support\Facades\Route;
             Route::get('/{id}', [MovieListController::class,'show']); 
             Route::delete('/{id}', [MovieListController::class,'deleteMovieList']); 
            
+        
         });
+    });
+
+    Route::group(['middleware'=>'auth:api'], function(){
+        Route::post('/follow/createfollow', [FollowerController::class, 'createFollow']);
     });
 
     // Route::group(['prefix' => 'followers'], function () {
