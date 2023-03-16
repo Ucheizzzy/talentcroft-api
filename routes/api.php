@@ -49,7 +49,6 @@ use Illuminate\Support\Facades\Route;
             Route::delete('/{id}', [UserController::class, 'deleteUser']);
 
             Route::get('/follow/{user:id}', [UserController::class, 'followUser']);
-            
         });
    
         //get all users
@@ -74,8 +73,20 @@ use Illuminate\Support\Facades\Route;
         Route::get('/{id}', [PostController::class, 'show']);
         // delete post
         Route::delete('/{id}', [PostController::class, 'destroy']);
+
+        Route::get('/user/{user}', [PostController::class, 'getOthersPosts']);
         Route::group(['middleware' => 'auth:api'], function () {
             Route::post('/', [PostController::class, 'createPost']);
+            Route::get('/like/{post:id}', [PostController::class, 'likeProject']);
+            Route::get('/dislike/{post:id}', [PostController::class, 'dislikeProject']);
+        });
+       
+    });
+
+    Route::group(['prefix' => 'sentiment', 'middleware' => 'auth:api'], function () {
+        Route::group(['middleware' => 'auth:api'], function () {
+            Route::get('/', [PostController::class, 'getProjectSentiments']);
+            Route::get('/{id}', [PostController::class, 'getMySentiment']);
         });
     });
 
@@ -136,15 +147,6 @@ use Illuminate\Support\Facades\Route;
         
         });
     });
-
-    Route::group(['middleware'=>'auth:api'], function(){
-        Route::post('/follow/createfollow', [FollowerController::class, 'createFollow']);
-    });
-
-    // Route::group(['prefix' => 'followers'], function () {
-    //     Route::get('/', [FollowersController::class, 'getAllFollowers']);
-    //     Route::get('/{id}', [FollowersController::class, 'show']);
-    // });
 
     Route::group(['middleware' => 'auth:api'], function () {
           // make payment

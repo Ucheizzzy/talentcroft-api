@@ -31,7 +31,7 @@ class Post extends Model
 
     public function sentiments()
     {
-        return $this->hasMany(Post_Sentiment::class);
+        return $this->hasMany(PostSentiment::class);
     }
 
     public function getSentimentAttribute()

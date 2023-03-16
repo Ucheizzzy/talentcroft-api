@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Post_Sentiment extends Model
+class PostSentiment extends Model
 {
     use HasFactory;
 
@@ -15,9 +15,12 @@ class Post_Sentiment extends Model
 
     protected $guarded = [];
 
-    public function post()
+    protected static function boot()
     {
-        return $this->belongsTo(Post::class);
+        parent::boot();
+        static::creating(function ($query) {
+            $query->user_id = auth()->id();
+        });
     }
 
     public function scopeLikes($query)

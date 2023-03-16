@@ -18,7 +18,6 @@ return new class extends Migration
         Schema::create('movies', function (Blueprint $table) {
             $table->id()->from(time());
             $table->foreignIdFor(MovieList::class);
-            // $table->integer('user_id');
             $table->string('name');
             $table->text('description')->nullable();
             $table->json('tags')->nullable();

@@ -13,11 +13,9 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('movies', function (Blueprint $table) {
-            $table->string('age_rating');
-            $table->text('director');
-            $table->string('year');
-            $table->string('genre');
+        Schema::table('movie_files', function (Blueprint $table) {
+            $table->string('alt_thumbnail')->nullable();
+            $table->string('background_picture')->nullable();
             $table->string('title_image')->nullable();
         });
     }
@@ -29,11 +27,9 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('movies', function (Blueprint $table) {
-            $table->dropColumn('age_rating');
-            $table->dropColumn('director');
-            $table->dropColumn('year');
-            $table->dropColumn('genre');
+        Schema::table('movie_files', function (Blueprint $table) {
+            $table->dropColumn('alt_thumbnail');
+            $table->dropColumn('background_picture');
             $table->dropColumn('title_image');
         });
     }

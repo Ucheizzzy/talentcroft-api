@@ -6,6 +6,7 @@ use App\Http\Requests\PostRequest;
 use App\Http\Resources\PostResource;
 use App\Models\Post;
 use App\Models\User;
+use App\Models\PostSentiment;
 use App\Repositories\PostRepository;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -29,11 +30,55 @@ class PostController extends Controller
         $post = Post::latest()->get();
         $data = PostResource::collection($post);
         return $this->respondWithSuccess(['data' => $data]);
-        // return $this->respondWithSuccess(['data' => [
-        //     'message' => 'All post made by users', 
-        //     'post' =>  $post,
-        //     ]
-        // ], 201);
+    }
+
+    final public function getMyPosts(Request $request)
+    {
+        $posts = $request->user()->posts()->searchable();
+        $data = PostResource::collection($posts->items());
+        return $this->respondWithSuccess(array_merge($posts->toArray(), ['data' => $data]));
+    }
+
+    final public function getOthersPosts(Request $request, User $user)
+    {
+        $posts = $user->posts()->searchable();
+        $data = PostResource::collection($posts->items());
+        return $this->respondWithSuccess(array_merge($posts->toArray(), ['data' => $data]));
+    }
+
+    final public function likeProject(Post $post, User $user)
+    {
+        //Delete if exist
+        $sentiment = $post->sentiments()->where(['user_id' => auth()->id()])->first();
+        if ($sentiment && $sentiment->isLiked) {
+            $sentiment->delete();
+            return $this->respondWithSuccess('delete');
+        }
+        $liked = $post->sentiments()->updateOrCreate(['user_id' => auth()->id()], ['sentiment' => 'liked']);
+        return $this->respondWithSuccess('liked');
+    }
+
+    final public function dislikeProject(Post $post)
+    {
+        $sentiment = $post->sentiments()->where(['user_id' => auth()->id()])->first();
+        if ($sentiment && $sentiment->isDisliked) {
+            $sentiment->delete();
+            return $this->respondWithSuccess('delete');
+        }
+        $post->sentiments()->updateOrCreate(['user_id' => auth()->id()], ['sentiment' => 'disliked']);
+        return $this->respondWithSuccess('disliked');
+    }
+
+    final public function getProjectSentiments()
+    {
+        $sentiment = PostSentiment::all();
+        return $this->respondWithSuccess(['data' => ['message' => 'Likes', 'sentiment' => $sentiment]], 201);
+    }
+
+    public function getMySentiment($id)
+    {
+        $sentiment = PostSentiment::findOrFail($id);
+        return $this->respondWithSuccess(['data' => ['message' => 'sentiment  ' . $sentiment->id . ' is found', 'sentiment' => $sentiment]], 201);
     }
 
     public function random()

@@ -18,7 +18,6 @@ use App\Http\Requests\ResetRequest;
 use App\Http\Requests\ForgetRequest;
 use App\Http\Resources\UserResource;
 use App\Models\Followers;
-use App\Models\Following;
 use App\Repositories\UserRepository;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -267,21 +266,24 @@ class UserController extends Controller
         return $this->respondWithSuccess(['data' => ['message' => 'All followers', 'follower' => $follower]], 201);
     }
 
-    final public function followUser(Followers $followers, Following $followings, User $user)
+    final public function followUser(Followers $follower, User $user)
     {
-        // dd($user->id, $user->follower());
+        $authId = auth()->id();
+        if (!$authId) {
+            return $this->respondWithError('Authentication error: user ID is null');
+        }
+    
         //Delete if exist
-        $follow = $followers->where(['follower_id' => auth()->id()])->first();
-        $followed = $followings->where(['following_id' => $user->id]);
+        $follow = $follower->where(['follower_id' => $authId])->first();
         if ($follow) {
             $follow->delete();
-            return $this->respondWithSuccess('delete');
+            return $this->respondWithSuccess('you just unfollowed' . ' ' . $user->first_name);
         }
-        $followers->updateOrCreate(['follower_id' => auth()->id()], ['user_id' => $user->id]);
-        $followings->updateOrCreate(['following_id' => $user->id], ['user_id' => auth()->id()]);
-
-        return $this->respondWithSuccess('followed');
-    } 
+    
+        $followed = $follower->updateOrCreate(['follower_id' => $authId], ['user_id' => $user->id]);
+        return $this->respondWithSuccess('you just followed' . ' ' . $user->first_name);
+    }
+    
 
     // final public function followUser(Followers $followers, User $user)
     // {

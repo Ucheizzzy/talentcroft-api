@@ -54,11 +54,6 @@ class User extends Authenticatable
         return $this->hasMany(Payment::class);
     }
 
-    // public function movies()
-    // {
-    //     return $this->hasMany(Movie::class);
-    // }
-
     public function posts(): HasMany
     {
         return $this->hasMany(Post::class);
@@ -69,14 +64,14 @@ class User extends Authenticatable
         return $this->hasMany(MovieList::class);
     }
 
-    public function following()
-    {
-        return $this->hasMany(Following::class);
-    }
-
     public function followers()
     {
         return $this->hasMany(Followers::class);
+    }
+
+    public function following()
+    {
+        return $this->hasMany(Followers::class, 'follower_id');
     }
 
     public function settings()
@@ -98,7 +93,7 @@ class User extends Authenticatable
             'followers' => $this->followers->count(),
             'following' => $this->following->count(),
             'wallet' => nf(0, 2),
-            // 'posts' => $this->post->count(),
+            'posts' => $this->posts->count(),
         ],
         );
     }
