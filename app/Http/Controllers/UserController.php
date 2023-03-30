@@ -185,7 +185,6 @@ class UserController extends Controller
         $user = User::find($id);
         $user->update($request->all());
         return response([ 'message'=>'user updated successful', 'user'=>$user], 201);
-
     }
 
     // public function updateUser(Request $request, $id){

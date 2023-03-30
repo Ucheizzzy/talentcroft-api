@@ -81,12 +81,22 @@ class MovieController extends Controller
         return $this->respondWithSuccess(array_merge($movies->toArray(), ['data' => $data]));
     }
 
-    final public function update(Request $request, Movie $movie)
+    public function updateMovie(Request $request, $movieId): JsonResponse
     {
-        $movie->update($request->all());
-        return $this->respondWithSuccess(['data' => [
-            'movie' => $this->movieRepository->parse($movie),
-            "message" => "Successfully updated " . $movie->name]], 201);
+        $movie = Movie::find($movieId);
+        if($request->description) $movie->description = $request->description;
+        if($request->name) $movie->name = $request->name;
+        if($request->director) $movie->director = $request->director;
+        if($request->age_rating) $movie->age_rating = $request->age_rating;
+        if($request->genre) $movie->genre = $request->genre;
+        if($request->tags) $movie->tags = $request->tags;
+        if($request->type) $movie->type = $request->type;
+        if($request->year) $movie->year = $request->year;
+        $movie->save();
+    return $this->respondWithSuccess(['data' => [
+    'movie' => $this->movieRepository->parse($movie),
+    "message" => "Successfully updated " . $movie->name
+    ]], 200);
     }
 
     final public function destroy($id)
