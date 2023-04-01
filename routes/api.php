@@ -74,10 +74,14 @@ use Illuminate\Support\Facades\Route;
         Route::delete('/{id}', [PostController::class, 'destroy']);
 
         Route::get('/user/{user}', [PostController::class, 'getOthersPosts']);
+
         Route::group(['middleware' => 'auth:api'], function () {
             Route::post('/', [PostController::class, 'createPost']);
             Route::get('/like/{post:id}', [PostController::class, 'likeProject']);
             Route::get('/dislike/{post:id}', [PostController::class, 'dislikeProject']);
+
+            // reaction videos
+            Route::post('/create/reaction/{post_id}', [PostController::class, 'createReaction']);
         });
        
     });

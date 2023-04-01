@@ -2,14 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\PostRequest;
-use App\Http\Resources\PostResource;
 use App\Models\Post;
 use App\Models\User;
-use App\Models\PostSentiment;
-use App\Repositories\PostRepository;
-use Illuminate\Http\JsonResponse;
+use App\Models\Reaction;
 use Illuminate\Http\Request;
+use App\Models\PostSentiment;
+use Illuminate\Support\Carbon;
+use Illuminate\Http\JsonResponse;
+use App\Http\Requests\PostRequest;
+use App\Http\Resources\PostResource;
+use App\Repositories\PostRepository;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use ProtoneMedia\LaravelFFMpeg\Support\FFMpeg;
@@ -174,4 +176,50 @@ class PostController extends Controller
         }
         return response()->json(['message' => 'Unable to delete movie. Please try again later.'], 400);
     }
+
+       public function createReaction(Request $request,  User $user, $post_id): JsonResponse
+    {
+        
+        $reaction = $request->validate([
+            'caption' => 'required',
+            // 'video' => 'mimetypes:video/avi,video/mpeg,video/quicktime,video/mp4,|required|max:102400',
+        ]);
+
+        $post = Post::findorfail($post_id);
+        $post_link = $post->id;
+
+        $reaction = new Reaction();
+        $reaction->user_id = $request->user_id;
+        $reaction->post_id = $post_link;
+        $reaction->caption = $request->caption;
+        $reaction->video = $request->video;
+        $reaction_created_at = Carbon::now();
+
+        $reaction->save(); 
+     
+        // reaction video file
+        $user_id = $reaction->user_id;
+        $reaction_location = "reactions";
+        $aws = env('AWS_ROUTE');
+        $file = $request->video;
+        $reaction_id = $reaction->id;
+        $path = $file->storeAs($reaction_location, "$reaction_id.{$file->extension()}" , 'reactions'); 
+        $media = FFMpeg::fromDisk("reactions")->open($path);
+        $filename = "$reaction_location/$reaction->id.{$file->extension()}";
+        $reaction->update([
+            'video' => "$aws/$filename",
+        ]);
+        $media = $media->export()
+            ->toDisk('s3')
+            ->save($filename);
+
+        //remove $media created files
+        $media->cleanupTemporaryFiles();
+        
+        // Delete file used for processing
+        Storage::disk("reactions")->delete($path);
+        return response()->json(['success' => true, 'message' => 'Reaction successfully uploaded', 'reaction' => $reaction], 200);
+    }
+
+
 }
